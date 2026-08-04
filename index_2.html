@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Học Bảng Chia</title>
+  <style>
+    :root {
+      --primary: #059669;
+      --primary-hover: #047857;
+      --bg-color: #f0fdf4;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: var(--card-bg);
+      width: 100%;
+      max-width: 480px;
+      padding: 32px 24px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    header p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .select-group {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .select-group label {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    select {
+      flex: 1;
+      padding: 10px 16px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      outline: none;
+      background-color: #fff;
+      color: var(--primary);
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    select:focus {
+      border-color: var(--primary);
+    }
+
+    .quiz-mode-btn {
+      width: 100%;
+      padding: 10px;
+      border: 1px dashed var(--primary);
+      background-color: #ecfdf5;
+      color: var(--primary);
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .quiz-mode-btn:hover {
+      background-color: #d1fae5;
+    }
+
+    .division-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background-color: #f1f5f9;
+      border-radius: 10px;
+      font-size: 1.15rem;
+      font-weight: 600;
+      transition: transform 0.1s ease, background-color 0.2s;
+    }
+
+    .row:hover {
+      transform: scale(1.01);
+      background-color: #e2e8f0;
+    }
+
+    .row .expression {
+      color: var(--text-main);
+    }
+
+    .row .result {
+      color: var(--primary);
+      background: #fff;
+      padding: 4px 12px;
+      border-radius: 6px;
+      min-width: 48px;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* CSS Chế độ tự kiểm tra */
+    .row.hidden-answer .result {
+      background: #cbd5e1;
+      color: transparent;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .row.hidden-answer .result::after {
+      content: "?";
+      color: #64748b;
+      display: block;
+      margin-top: -24px;
+    }
+
+    .row.hidden-answer .result.revealed {
+      background: #fff;
+      color: var(--primary);
+    }
+
+    .row.hidden-answer .result.revealed::after {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Bảng Chia Tiểu Học</h1>
+      <p>Chọn bảng chia để bắt đầu luyện tập</p>
+    </header>
+
+    <div class="controls">
+      <div class="select-group">
+        <label for="table-select">Chọn bảng:</label>
+        <select id="table-select" onchange="renderTable()">
+          <option value="1">Bảng chia 1</option>
+          <option value="2">Bảng chia 2</option>
+          <option value="3">Bảng chia 3</option>
+          <option value="4">Bảng chia 4</option>
+          <option value="5">Bảng chia 5</option>
+          <option value="6">Bảng chia 6</option>
+          <option value="7">Bảng chia 7</option>
+          <option value="8">Bảng chia 8</option>
+          <option value="9">Bảng chia 9</option>
+        </select>
+      </div>
+
+      <button class="quiz-mode-btn" id="quiz-btn" onclick="toggleQuizMode()">
+        💡 Bật chế độ tự kiểm tra (Ẩn đáp án)
+      </button>
+    </div>
+
+    <div class="division-list" id="table-container">
+      <!-- Dữ liệu phép chia sẽ được tạo tự động ở đây -->
+    </div>
+  </div>
+
+  <script>
+    let isQuizMode = false;
+
+    function renderTable() {
+      // n là số chia (VD: chọn 2 -> các phép tính chia cho 2)
+      const n = parseInt(document.getElementById('table-select').value);
+      const container = document.getElementById('table-container');
+      container.innerHTML = '';
+
+      for (let i = 1; i <= 10; i++) {
+        const dividend = n * i; // Số bị chia (VD: 2 * 1 = 2, 2 * 2 = 4, ...)
+        const quotient = i;     // Thương số (kết quả)
+
+        const row = document.createElement('div');
+        row.className = `row ${isQuizMode ? 'hidden-answer' : ''}`;
+        
+        row.innerHTML = `
+          <span class="expression">${dividend} : ${n}</span>
+          <span class="equals">=</span>
+          <span class="result" onclick="revealAnswer(this)">${quotient}</span>
+        `;
+        
+        container.appendChild(row);
+      }
+    }
+
+    function toggleQuizMode() {
+      isQuizMode = !isQuizMode;
+      const btn = document.getElementById('quiz-btn');
+      
+      if (isQuizMode) {
+        btn.innerText = "👁️ Hiện toàn bộ đáp án";
+        btn.style.backgroundColor = "#fef3c7";
+        btn.style.borderColor = "#f59e0b";
+        btn.style.color = "#d97706";
+      } else {
+        btn.innerText = "💡 Bật chế độ tự kiểm tra (Ẩn đáp án)";
+        btn.style.backgroundColor = "#ecfdf5";
+        btn.style.borderColor = "var(--primary)";
+        btn.style.color = "var(--primary)";
+      }
+      
+      renderTable();
+    }
+
+    function revealAnswer(element) {
+      if (isQuizMode) {
+        element.classList.toggle('revealed');
+      }
+    }
+
+    // Khởi tạo bảng chia 1 khi vừa nạp trang
+    renderTable();
+  </script>
+
+</body>
+</html>
